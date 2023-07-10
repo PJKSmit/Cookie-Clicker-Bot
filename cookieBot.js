@@ -1,5 +1,5 @@
 function init() {
-    AutoClicker = setInterval(Game.ClickCookie, 1000);
+    Game.Notify("CookieBot", "Hello",1,100);
+    const clickInterval = setInterval(() => Game.ClickCookie(), 4)
 }
-
 init();
