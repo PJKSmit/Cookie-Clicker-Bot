@@ -1,0 +1,1 @@
+This is a bot made for Cookie Clicker by Pieter Smit. The bot chooses what to buy based on a greedy algorithm.
