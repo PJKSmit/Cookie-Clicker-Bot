@@ -1,35 +1,41 @@
-function BuyBestSimple() {
-    if(Game.ObjectsById[0].getSumPrice(1) < Game.cookies) {
-        Game.ObjectsById[0].buy(1);
-    }
-    for(var upgrade of Game.UpgradesInStore) {
-        if(!upgrade.bought) {
-            if(upgrade.getPrice() < Game.cookies) {
-                upgrade.buy(true);
+var cookieBotOn = false
+
+function BuyBest() {
+    if(cookieBotOn) {
+        var fastestReturnOnInvestment = Infinity
+        var bestBuilding = Game.ObjectsById[0];
+        for(var i = 0; i < Game.ObjectsById.length; i++) {
+            building = Game.ObjectsById[i];
+            var returnOnInvestement = (building.getSumPrice(1) / building.cps(building)) + (building.getSumPrice(1) / (Game.cookiesPs + 10));
+            if(returnOnInvestement < fastestReturnOnInvestment) {
+                fastestReturnOnInvestment = returnOnInvestement;
+                bestBuilding = building;
             }
+        }
+        if(bestBuilding.getSumPrice(1) < Game.cookies) {
+            bestBuilding.buy(1);
         }
     }
 }
 
-function BuyBest() {
-    var fastestReturnOnInvestment = Infinity
-    var bestBuilding = Game.ObjectsById[0];
-    for(var i = 0; i < Game.ObjectsById.length; i++) {
-        building = Game.ObjectsById[i];
-        var returnOnInvestement = (building.getSumPrice(1) / building.cps(building)) + (building.getSumPrice(1) / (Game.cookiesPs + 10));
-        if(returnOnInvestement < fastestReturnOnInvestment) {
-            fastestReturnOnInvestment = returnOnInvestement;
-            bestBuilding = building;
-        }
+function CheckName() {
+    if(Game.bakeryNameL.textContent == "start's bakery") {
+        cookieBotOn = true;
+    } else if (Game.bakeryNameL.textContent == "stop's bakery") {
+        cookieBotOn = false;
     }
-    if(bestBuilding.getSumPrice(1) < Game.cookies) {
-        bestBuilding.buy(1);
+}
+
+function ClickCookie() {
+    if(cookieBotOn) {
+        Game.ClickCookie();
     }
 }
 
 function init() {
-    const clickInterval = setInterval(() => Game.ClickCookie(), 100);
+    const clickInterval = setInterval(() => ClickCookie(), 100);
     const buyInterval = setInterval(() => BuyBest(), 1000);
+    const nameCheckInterval = setInterval(() => CheckName(), 5000);
 }
 
 init();
