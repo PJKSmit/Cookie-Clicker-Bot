@@ -1,7 +1,11 @@
 var clicksPerSecond = 10;
+
+//Game intervals
 var clickInterval;
 var buyInterval;
 var goldenCookieInterval;
+var sugarLumpInterval;
+
 var bestOption;
 var oldLengthBuffsL = 0;
 
@@ -9,33 +13,42 @@ var cookieBotOn = false;
 
 //What icon corresponds to what building.
 const icons = {
-    0:  "Cursor",
-    1:  "Grandma",
-    2:  "Farm",
-    3:  "Mine",
-    4:  "Factory",
-    15: "Bank",
-    16: "Temple",
-    17: "Wizard Tower",
-    5:  "Shipment",
-    6:  "Alchemy lab",
-    7:  "Portal",
-    8:  "Time machine",
-    13: "Antimatter condenser",
-    14: "Prism",
-    19: "Chancemaker",
-    20: "Fractal engine",
-    32: "Javascript console",
-    33: "Idleverse",
-    34: "Cortex baker",
-    35: "You"
+    0:  0,
+    1:  1,
+    2:  2,
+    3:  3,
+    4:  4,
+    15: 5,
+    16: 6,
+    17: 7,
+    5:  8,
+    6:  9,
+    7:  10,
+    8:  11,
+    13: 12,
+    14: 13,
+    19: 14,
+    20: 15,
+    32: 16,
+    33: 17,
+    34: 18,
+    35: 19
 }
 
-//Multiplier of cursor upgrades after tier three
-const cursorMultiplier = [1, 5, 10, 20, 20, 20, 20, 20, 20, 20, 20, 20];
+//Multiplier of cursor upgrades after tier three.
+const cursorMultipliers = [1, 5, 10, 20, 20, 20, 20, 20, 20, 20, 20, 20];
 
-//kitten multipliers.
+//Kitten multipliers.
 const kittenMultipliers = [0, 0.1, 0.125, 0.15, 0.175, 0.2, 0.2, 0.2, 0.2, 0.2, 0.175, 0.15, 0.125, 0.115, 0.11, 0.105, 0.1, 0.05];
+
+//Tech Multipliers.
+const techMultipliers = {
+    "Specialized chocolate chips":  0.01,
+    "Designer cocoa beans":         0.02,
+    "Underworld ovens":             0.03,
+    "Exotic nuts":                  0.04,
+    "Arcane sugar":                 0.05
+}
 
 function CalculateBestOption() {
     var fastestReturnOnInvestment = Infinity;
@@ -73,10 +86,13 @@ function CheckName() {
         clickInterval = setInterval(() => Game.ClickCookie(), 1000/clicksPerSecond);
         buyInterval = setInterval(() => BuyBest(), 100);
         goldenCookieInterval = setInterval(() => HandleGoldenCookies(), 1000);
+        sugarLumpInterval = setInterval(() => handleSugarLumps(), 1000);
         cookieBotOn = true;
     } else if (cookieBotOn && Game.bakeryNameL.textContent == "stop's bakery") {
         clearInterval(clickInterval);
         clearInterval(buyInterval);
+        clearInterval(goldenCookieInterval);
+        clearInterval(sugarLumpInterval);
         cookieBotOn = false;
     }
 }
@@ -98,6 +114,15 @@ function HandleGoldenCookies() {
     if(oldLengthBuffsL > Game.buffsL.length) CalculateBestOption();
 }
 
+function handleSugarLumps() {
+    if(Date.now() - Game.lumpT > Game.lumpRipeAge) {
+        Game.clickLump();
+    }
+    if(Game.lumps > 0) {
+        //Work in progress
+    }
+}
+
 function UpgradeReturnOnInvestment(upgrade) {
     var bonus = upgrade.getPrice() / 1000;
     //Cookieupgrades
@@ -114,11 +139,12 @@ function UpgradeReturnOnInvestment(upgrade) {
                 for(i in Game.Objects) {
                     amountOfBuildings += Game.Objects[i].amount;
                 }
-                bonus = amountOfBuildings * 0.01 * cursorMultiplier[upgrade.tier - 4];
+                bonus = amountOfBuildings * 0.01 * cursorMultipliers[upgrade.tier - 4];
             }
         //Non-cursor
         } else if(upgrade.icon[0] in icons && (upgrade.icon[1] < 3 || upgrade.icon[1] > 12) && upgrade.icon[1] != 32) {
-            var building = Game.Objects[icons[upgrade.icon[0]]];
+            var building = Game.ObjectsById[icons[upgrade.icon[0]]];
+            if(typeof building === "undefined") console.log(icons[upgrade.icon[0]]);
             bonus = building.storedCps * building.amount * Game.globalCpsMult;
         //Manualclicks
         } else if(upgrade.icon[0] == 11 && (upgrade.icon[1] < 3 || upgrade.icon[1] > 12) && upgrade.icon[1] != 32) {
@@ -136,15 +162,26 @@ function UpgradeReturnOnInvestment(upgrade) {
 				else if (godLvl==3) milkMult*=1.03;
 			}
 			milkMult*=Game.eff('milk');
-            bonus = Game.cookiesPs * (1 + Game.milkProgress * kittenMultipliers[upgrade.tier] * milkMult)
+            bonus = Game.cookiesPs * (Game.milkProgress * kittenMultipliers[upgrade.tier] * milkMult)
         //Grandma synergie 
         } else if(upgrade.icon = [10, 9]) {
             var grandmaNumber = upgrade.buildingTie.id - 1;
             bonus = Game.ObjectsById[1].amount / grandmaNumber * upgrade.buildingTie.storedTotalCps / 100 + Game.ObjectsById[1].storedTotalCps;
+        //Bingo center/Research facility: half of the bonus given by the first upgrade. (Completely arbitrary)
+        } else if(upgrade.name == "Bingo center/Research facility") {
+            bonus = Game.cookiesPs * 0.05
         }
     //Tech upgrades
     } else if(upgrade.pool == "tech") {
-        //Work in progress
+        if(upgrade.name in techMultipliers) bonus = Game.cookiesPs * techMultipliers[upgrade.name];
+        else if(upgrade.name == "Ritual rolling pins") bonus = Game.ObjectsById[1].storedTotalCps;
+        else if(upgrade.name == "One mind" || upgrade.name == "Communal brainsweep") {
+            grandma = Game.ObjectsById[1];
+            bonus = grandma.storedCps / grandma.baseCps * grandma.amount * 0.02 * grandma.amount; //+ elderWrath effect, communal brainsweep might not be worth it
+        } else if(upgrade.name == "Elder Pact") {
+            grandma = Game.ObjectsById[1];
+            bonus = grandma.storedCps / grandma.baseCps * grandma.amount * 0.05 * Game.ObjectsById[10];
+        }
     }
     return (upgrade.getPrice() / bonus) + (Math.max(upgrade.getPrice() - Game.cookies, 0) / (Game.cookiesPs + 10));
 }
