@@ -1,15 +1,19 @@
 var clicksPerSecond = 10;
+var minigameUnlockOrder = [7, 6, 2, 5];
+var pantheonGods = ["ruin", "mother", "industry"];
 
 //Game intervals
 var clickInterval;
 var buyInterval;
 var goldenCookieInterval;
 var sugarLumpInterval;
+var minigameInterval;
 
 var bestOption;
 var oldLengthBuffsL = 0;
 
 var cookieBotOn = false;
+var playMinigames = false;
 
 //What icon corresponds to what building.
 const icons = {
@@ -50,6 +54,28 @@ const techMultipliers = {
     "Arcane sugar":                 0.05
 }
 
+//Overrides for upgrades that do not have a fixed or have an unclear bonus.
+const upgradeOverrides = {
+    "Lucky day":                    0.5,
+    "Serendipity":                  0.5,
+    "Get lucky":                    0.5,
+    "A crumbly egg":                0.5,
+    "A festive hat":                0.1,
+    "Reindeer baking grounds":      0.1,
+    "Weighted sleighs":             0.1,
+    "Ho ho ho-flavored frosting":   0.1,
+    "Season savings":               0.01,
+    "Toy workshop":                 0.05,
+    "Santa\"s bottomless bag":      0.1,
+    "Santa\"s helpers":             clicksPerSecond * 0.1,
+    "Golden goose egg":             0.05,
+    "Faberge egg":                  0.01,
+    "Wrinklerspawn":                0.05,
+    "Cookie egg":                   clicksPerSecond * 0.1,
+    "Omelette":                     0.1,
+    "Elder Pledge":                 0.1
+}
+
 function CalculateBestOption() {
     var fastestReturnOnInvestment = Infinity;
     for(var i in Game.ObjectsById) {
@@ -73,6 +99,7 @@ function CalculateBestOption() {
 }
 
 function BuyBest() {
+    Game.popups=0;
     if(typeof bestOption === "undefined") CalculateBestOption();
     if(bestOption.getPrice() < Game.cookies) {
         bestOption.buy(1);
@@ -86,13 +113,15 @@ function CheckName() {
         clickInterval = setInterval(() => Game.ClickCookie(), 1000/clicksPerSecond);
         buyInterval = setInterval(() => BuyBest(), 100);
         goldenCookieInterval = setInterval(() => HandleGoldenCookies(), 1000);
-        sugarLumpInterval = setInterval(() => handleSugarLumps(), 1000);
+        sugarLumpInterval = setInterval(() => HandleSugarLumps(), 1000);
+        if(playMinigames)  minigameInterval = setInterval(() => PlayMinigames(), 1000);
         cookieBotOn = true;
     } else if (cookieBotOn && Game.bakeryNameL.textContent == "stop's bakery") {
         clearInterval(clickInterval);
         clearInterval(buyInterval);
         clearInterval(goldenCookieInterval);
         clearInterval(sugarLumpInterval);
+        clearInterval(minigameInterval);
         cookieBotOn = false;
     }
 }
@@ -114,17 +143,103 @@ function HandleGoldenCookies() {
     if(oldLengthBuffsL > Game.buffsL.length) CalculateBestOption();
 }
 
-function handleSugarLumps() {
+function HandleSugarLumps() {
+    if (!Game.canLumps()) return;
     if(Date.now() - Game.lumpT > Game.lumpRipeAge) {
         Game.clickLump();
     }
     if(Game.lumps > 0) {
-        //Work in progress
+        SpendSugarLumps();
     }
+}
+
+function SpendSugarLumps() {
+    for(var i in minigameUnlockOrder) {
+        building = Game.ObjectsById[minigameUnlockOrder[i]];
+        if(!building.level && Game.lumps) {
+            playMinigames = true;
+            building.levelUp();
+            minigameInterval = setInterval(() => PlayMinigames(), 1000);
+        }
+    }
+    farm = Game.ObjectsById[2];
+    if(farm.level < 9 && Game.lumps > farm.level) {farm.levelUp(); return;}
+    cursor = Game.ObjectsById[0];
+    if(cursor.level < 12 && Game.lumps > cursor.level) {cursor.levelUp(); return;}
+    if(farm.level == 9 && Game.lumps > farm.level + 94) {farm.levelUp(); return;}
+    if(cursor.level < 20 && Game.lumps > cursor.level + 95) {cursor.levelUp(); return;}
+    for(var i in Game.Objects) {
+        building = Game.Objects[i];
+        if(building.level < 10 && Game.lumps > building.level + 100) {building.levelUp(); return;}
+    }
+}
+
+function PlayMinigames() {
+    PlayGrimoire();
+    PlayPantheon();
+    PlayGarden();
+    PlayStockMarket();
+}
+
+function PlayGrimoire() {
+    wizardTower = Game.Objects["Wizard tower"].minigame;
+    if(!Game.isMinigameReady(Game.Objects["Wizard tower"])) return;
+    conjureBakedGoods = wizardTower.spells["conjure baked goods"];
+    forceHandOfFate = wizardTower.spells["hand of fate"];
+    if(Game.cookiesPs / Game.unbuffedCps > 100) { //If there is a cps buff active.
+        if(wizardTower.magic > wizardTower.getSpellCost(conjureBakedGoods) && Game.cookiesPs * 60 * 30 < Game.cookies * 0,15 * 2 ) { 
+            /* And half an hour worth of cookies is less than 30% (best is 15% but sacrifices are necessary) 
+            of the cookies in the bank and there is enough magic use 'Conjure Baked Goods' to add to the buff that already is active.*/
+            wizardTower.castSpell(conjureBakedGoods); 
+            CalculateBestOption();
+            return; 
+        } else if(wizardTower.magic > wizardTower.getSpellCost(forceHandOfFate)) { //Otherwise try to get another buff from a golden cookie
+            wizardTower.castSpell(forceHandOfFate);
+            CalculateBestOption();
+        }
+    }
+    if(wizardTower.magic / wizardTower.magicM >= 0.95 && wizardTower.magic > wizardTower.getSpellCost(forceHandOfFate)) {//Try to get a golden cookie
+        wizardTower.castSpell(forceHandOfFate);
+        CalculateBestOption();
+    }
+}
+
+function PlayPantheon() {
+    var temple = Game.Objects["Temple"].minigame;
+    if(!Game.isMinigameReady(Game.Objects["Temple"])) return;
+    for(var i = 0; i < 3; i++) {
+        if (temple.swaps < 3) break;
+        if (temple.slot[i] != temple.gods[pantheonGods[i]].id) {temple.slotHovered = i; temple.dragging = temple.gods[pantheonGods[i]]; temple.dropGod();}
+        CalculateBestOption();
+    }
+    for (var i in Game.buffs)
+    {
+        if (typeof Game.buffs[i].multClick != 'undefined' && Game.buffs[i].multClick > 1) {
+            for(var i in Game.Objects) {
+                building = Game.Objects[i];
+                if(building.name != "Grandma" && building.storedTotalCps * Game.globalCpsMult / Game.unbuffedCps < 0.01) {
+                    building.sell(-1);
+                    CalculateBestOption();
+                } 
+            }
+        }
+    }
+}
+
+function PlayGarden() {
+    //Work In Progress
+}
+
+function PlayStockMarket() {
+    //Work In Progress
 }
 
 function UpgradeReturnOnInvestment(upgrade) {
     var bonus = upgrade.getPrice() / 1000;
+    //Upgrades that do not have a fixed or have an unclear bonus.
+    if(upgrade.name in upgradeOverrides) {
+        bonus = upgradeOverrides[upgrade.name] * Game.cookiesPs;
+    }
     //Cookieupgrades
     if(upgrade.pool == "cookie") {
         bonus = Game.cookiesPs * upgrade.power / 100;
@@ -169,7 +284,7 @@ function UpgradeReturnOnInvestment(upgrade) {
             bonus = Game.ObjectsById[1].amount / grandmaNumber * upgrade.buildingTie.storedTotalCps / 100 + Game.ObjectsById[1].storedTotalCps;
         //Bingo center/Research facility: half of the bonus given by the first upgrade. (Completely arbitrary)
         } else if(upgrade.name == "Bingo center/Research facility") {
-            bonus = Game.cookiesPs * 0.05
+            bonus = Game.ObjectsById[1].storedTotalCps * 3;
         }
     //Tech upgrades
     } else if(upgrade.pool == "tech") {
