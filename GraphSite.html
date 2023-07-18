@@ -12,15 +12,14 @@
             var layout = {title: "Return on investement for buildings and upgrades over time."};
 
             window.addEventListener('message', function(event) {
-                console.log(event.data);
                 if(event.srcElement.location.href == window.location.href) {
                 graphData = event.data
+
+                // Display using Plotly
+                console.log(graphData);
+                Plotly.newPlot("returnOnInvestments", graphData, layout);
                 }
             });
-
-            // Display using Plotly
-            console.log(graphData);
-            Plotly.newPlot("returnOnInvestments", graphData, layout);
         </script>
 
     </body>
