@@ -3,21 +3,18 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <body>
-        <div id="returnOnInvestments" style="width:100%;"></div>
+        <div id="returnOnInvestments" style="width:100%; height:1000px"></div>
 
         <script>
-            var graphData;
 
             //Define Layout
             var layout = {title: "Return on investement for buildings and upgrades over time."};
 
             window.addEventListener('message', function(event) {
                 if(event.srcElement.location.href == window.location.href) {
-                graphData = event.data
-
-                // Display using Plotly
-                console.log(graphData);
-                Plotly.newPlot("returnOnInvestments", graphData, layout);
+                    var layout = {name: "Returns on investment"};
+                    // Display using Plotly
+                    Plotly.newPlot("returnOnInvestments", event.data, layout);
                 }
             });
         </script>
