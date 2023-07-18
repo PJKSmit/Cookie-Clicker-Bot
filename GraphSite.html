@@ -6,14 +6,15 @@
         <div id="returnOnInvestments" style="width:100%;max-width:700px"></div>
 
         <script>
-            function ShowGraph(data) {
-                //Define Layout
-                var layout = {title: "Return on investement for buildings and upgrades over time."};
+            var graphData = data;
 
-                // Display using Plotly
-                console.log(data);
-                Plotly.newPlot("returnOnInvestments", data, layout);
-            }
+            //Define Layout
+            var layout = {title: "Return on investement for buildings and upgrades over time."};
+
+            // Display using Plotly
+            console.log(data);
+            console.log(graphData);
+            Plotly.newPlot("returnOnInvestments", graphData, layout);
         </script>
 
     </body>
