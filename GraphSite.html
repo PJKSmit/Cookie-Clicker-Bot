@@ -23,10 +23,12 @@
             function DataConverter(data) {
                 var output = "<ol>";
                 var compressedData = []
+                console.log(data);
                 for(var item in data) {
                     if(compressedData[compressedData.length - 1]) {if(compressedData[compressedData.length - 1]["item"] == item) compressedData[-1]["amount"]++;}
                     else compressedData.push({item: item, amount: 1})
                 }
+                console.log(compressedData);
                 for(var items in compressedData) {
                     output += "<li>" + items["amount"] + "x " + items["item"] + "</li>";
                 }
