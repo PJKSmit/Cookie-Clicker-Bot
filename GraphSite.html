@@ -12,6 +12,7 @@
             var layout = {title: "Return on investement for buildings and upgrades over time."};
 
             window.addEventListener('message', function(event) {
+                console.log(event.data);
                 if(event.srcElement.location.href == window.location.href) {
                 graphData = event.data
                 }
