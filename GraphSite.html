@@ -25,8 +25,9 @@
                 var compressedData = []
                 console.log(data);
                 for(var item in data) {
-                    if(compressedData[compressedData.length - 1]) {if(compressedData[compressedData.length - 1]["item"] == item) compressedData[-1]["amount"]++;}
+                    if(compressedData[compressedData.length - 1] && compressedData[compressedData.length - 1]["item"] == item) compressedData[-1]["amount"]++;
                     else compressedData.push({item: item, amount: 1})
+                    console.log(item);
                     console.log(compressedData);
                 }
                 for(var items in compressedData) {
