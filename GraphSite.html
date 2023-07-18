@@ -4,9 +4,8 @@
 
     <body>
         <div id="returnOnInvestments" style="width:100%;"></div>
-
+        <div id="Buy Order"></div>
         <script>
-
             //Define Layout
             var layout = {
                 title: "Return on investement for buildings and upgrades over time.",
@@ -16,9 +15,25 @@
             window.addEventListener('message', function(event) {
                 if(event.srcElement.location.href == window.location.href) {
                     // Display using Plotly
-                    Plotly.newPlot("returnOnInvestments", event.data, layout);
+                    Plotly.newPlot("returnOnInvestments", event.data[0], layout);
+                    document.getElementById("Buy Order").innerHTML = DataConverter(event.data[1]);
                 }
             });
+
+            function DataConverter(data) {
+                var output = "<ol>";
+                var compressedData = []
+                for(var item in data) {
+                    if(compressedData[-1]["item"] == item) compressedData[-1]["amount"]++;
+                    else compressedData.push({item: item, amount: 1})
+                }
+                for(var items in compressedData) {
+                    output += "<li>" + items["amount"] + "x " + items["item"] + "</li>";
+                }
+                output += "</ol>";
+                console.log(output);
+                return output
+            }
         </script>
 
     </body>
