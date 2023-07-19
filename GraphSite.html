@@ -4,18 +4,18 @@
 
     <body>
         <div id="Graphs" style="max-height:1000px; overflow-y:auto">
-            <div id="returnOnInvestments" style="width:99%;"></div>
-            <div id="CookiesPerSecond" style="width:99%;"></div>
-            <div id="TotalCookiesAllTime" style="width:99%;"></div>
-            <div id="TotalCookiesThisAscension" style="width:99%;"></div>
+            <div id="returnOnInvestments" style="width:98%;"></div>
+            <div id="CookiesPerSecond" style="width:98%;"></div>
+            <div id="TotalCookiesAllTime" style="width:98%;"></div>
+            <div id="TotalCookiesThisAscension" style="width:98%;"></div>
         </div>
         <div id="Buy Order" style="max-height:500px; overflow-y:auto"></div>
         <script>
             //Define Layout
-            var layout = {
-                title: "Return on investement for buildings and upgrades over time.",
-                height: 1000,
-            };
+            var layout1 = {title: "Return on investement for buildings and upgrades over time.", height: 1000};
+            var layout2 = {title: "Cookies per second over time.", height: 1000};
+            var layout3 = {title: "Total cookies (all time) over time.", height: 1000};
+            var layout4 = {title: "Total cookies (this ascension) over time.", height: 1000};
 
             window.addEventListener('message', function(event) {
                 if(event.srcElement.location.href == window.location.href) {
