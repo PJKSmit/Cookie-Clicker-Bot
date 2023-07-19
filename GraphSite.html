@@ -32,6 +32,7 @@
                     console.log(compressedData);
                 }
                 for(var items in compressedData) {
+                    items = compressedData[items];
                     output += "<li>" + items["amount"] + "x " + items["item"] + "</li>";
                 }
                 output += "</ol>";
