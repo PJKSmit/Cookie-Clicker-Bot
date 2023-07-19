@@ -26,14 +26,14 @@
                 console.log(data);
                 for(var item in data) {
                     item = data[item];
-                    if(compressedData[compressedData.length - 1] && compressedData[compressedData.length - 1]["item"] == item) compressedData[compressedData.length - 1]["amount"]++;
-                    else compressedData.push({item: item, amount: 1})
+                    if(compressedData[compressedData.length - 1] && compressedData[compressedData.length - 1]["item"] == item["item"]) compressedData[compressedData.length - 1]["amount"]++;
+                    else compressedData.push({item: item["item"], amount: 1, time: item["time"]})
                     console.log(item);
                     console.log(compressedData);
                 }
                 for(var items in compressedData) {
                     items = compressedData[items];
-                    output += "<li>" + items["amount"] + "x " + items["item"] + "</li>";
+                    output += "<li>" + items["amount"] + "x " + items["item"] + " at " + items["time"] + "</li>";
                 }
                 output += "</ol>";
                 console.log(output);
