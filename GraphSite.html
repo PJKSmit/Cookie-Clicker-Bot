@@ -20,10 +20,10 @@
             window.addEventListener('message', function(event) {
                 if(event.srcElement.location.href == window.location.href) {
                     // Display using Plotly
-                    Plotly.newPlot("returnOnInvestments", event.data[0], layout);
-                    Plotly.newPlot("CookiesPerSecond", event.data[2], layout);
-                    Plotly.newPlot("TotalCookiesAllTime", event.data[3], layout);
-                    Plotly.newPlot("TotalCookiesThisAscension", event.data[4], layout);
+                    Plotly.newPlot("returnOnInvestments", event.data[0], layout1);
+                    Plotly.newPlot("CookiesPerSecond", event.data[2], layout2);
+                    Plotly.newPlot("TotalCookiesAllTime", event.data[3], layout3);
+                    Plotly.newPlot("TotalCookiesThisAscension", event.data[4], layout4);
                     document.getElementById("Buy Order").innerHTML = DataConverter(event.data[1]);
                 }
             });
