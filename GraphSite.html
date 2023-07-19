@@ -3,7 +3,12 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <body>
-        <div id="returnOnInvestments" style="width:99%;"></div>
+        <div id="Graphs" style="max-height:1000px; overflow-y:auto">
+            <div id="returnOnInvestments" style="width:99%;"></div>
+            <div id="CookiesPerSecond" style="width:99%;"></div>
+            <div id="TotalCookiesAllTime" style="width:99%;"></div>
+            <div id="TotalCookiesThisAscension" style="width:99%;"></div>
+        </div>
         <div id="Buy Order" style="max-height:500px; overflow-y:auto"></div>
         <script>
             //Define Layout
@@ -16,6 +21,9 @@
                 if(event.srcElement.location.href == window.location.href) {
                     // Display using Plotly
                     Plotly.newPlot("returnOnInvestments", event.data[0], layout);
+                    Plotly.newPlot("CookiesPerSecond", event.data[2], layout);
+                    Plotly.newPlot("TotalCookiesAllTime", event.data[3], layout);
+                    Plotly.newPlot("TotalCookiesThisAscension", event.data[4], layout);
                     document.getElementById("Buy Order").innerHTML = DataConverter(event.data[1]);
                 }
             });
