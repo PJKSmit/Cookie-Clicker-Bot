@@ -1,29 +1,23 @@
 <!DOCTYPE html>
 <html>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <body>
         <div id="Graphs" style="max-height:1000px; overflow-y:auto">
-            <div id="returnOnInvestments" style="width:98%;"></div>
-            <div id="CookiesPerSecond" style="width:98%;"></div>
-            <div id="TotalCookiesAllTime" style="width:98%;"></div>
-            <div id="TotalCookiesThisAscension" style="width:98%;"></div>
+            <canvas id="returnOnInvestments" style="width:100%;"></canvas>
+            <canvas id="CookiesPerSecond" style="width:100%;"></canvas>
+            <canvas id="TotalCookiesAllTime" style="width:100%;"></canvas>
+            <canvas id="TotalCookiesThisAscension" style="width:100%;"></canvas>
         </div>
         <div id="Buy Order" style="max-height:500px; overflow-y:auto"></div>
         <script>
-            //Define Layout
-            var layout1 = {title: "Return on investement for buildings and upgrades over time.", height: 1000};
-            var layout2 = {title: "Cookies per second over time.", height: 1000};
-            var layout3 = {title: "Total cookies (all time) over time.", height: 1000};
-            var layout4 = {title: "Total cookies (this ascension) over time.", height: 1000};
 
             window.addEventListener('message', function(event) {
                 if(event.srcElement.location.href == window.location.href) {
-                    // Display using Plotly
-                    Plotly.newPlot("returnOnInvestments", event.data[0], layout1);
-                    Plotly.newPlot("CookiesPerSecond", event.data[2], layout2);
-                    Plotly.newPlot("TotalCookiesAllTime", event.data[3], layout3);
-                    Plotly.newPlot("TotalCookiesThisAscension", event.data[4], layout4);
+                    // Display using Chartjs
+                    new Chart("returnOnInvestments", event.data[0])
+                    new Chart("CookiesPerSecond", event.data[2])
+                    new Chart("TotalCookiesAllTime", event.data[3])
+                    new Chart("TotalCookiesThisAscension", event.data[4])
                     document.getElementById("Buy Order").innerHTML = DataConverter(event.data[1]);
                 }
             });
