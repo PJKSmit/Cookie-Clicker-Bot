@@ -6,29 +6,118 @@
     3. Total cookies baked (all time).
     4. Total cookies baked (this ascension).
 */
-var data = [[], [], [], [], [], []];
+var ReturnOnInvestmentData = {};;
+var BuyData = [];
+var CookiesPerSecondData = {};
+var TotalCookiesAllTimeData = {};
+var TotalCookeisThisAscensionData = {};
 
 //Initialize the data variable. (Debuging only)
 function InitData() {
-    for(var i in Game.Objects) {
-        building = Game.Objects[i];
-        data[0][building.id] = {x: [], y: [], mode: "lines", name: building.name};
+    ReturnOnInvestmentData = {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            legend: {display: false},
+            title: {
+                display: true,
+                text: "The return of investment of all the upgrades and objects over time."
+            }
+        }
     }
-    for(var i in Game.Upgrades) {
-        upgrade = Game.Upgrades[i];
-        data[0][upgrade.id + Game.ObjectsN] = {x: [], y: [], mode: "lines", name: upgrade.name};
+    for(var i = 0;i < Game.ObjectsN; i++) {
+        ReturnOnInvestmentData.data.datasets[i] = {
+            label: Game.ObjectsById[i].name,
+            data: [],
+            borderColor: GetRandomColorHex(),
+            fill: false,
+            lineTension: 0,
+        }
     }
-    data[0][data[0].length] = {x: [],y: [], mode: "lines", name: "Lowest return on investment"};
-    data[0][data[0].length] = {x: [], y: [], mode: "markers", name: "Golden Cookies"};
-    data[2][0] = {x: [], y: [], mode: "lines", name: "Cookies per second"};
-    data[3][0] = {x: [], y: [], mode: "lines", name: "Total cookies baked (all time)."};
-    data[4][0] = {x: [], y: [], mode: "lines", name: "Total cookies baked (this ascension)."};
+    for(var i = 0;i < Game.UpgradesN; i++) {
+        ReturnOnInvestmentData.data.datasets[i + Game.ObjectsN] = {
+            label: Game.UpgradesById[i].name,
+            data: [],
+            borderColor: GetRandomColorHex(),
+            fill: false,
+            lineTension: 0,
+        }
+    }
+    CookiesPerSecondData = {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                borderColor: GetRandomColorHex(),
+                fill: false,
+                lineTension: 0,
+            }]
+        },
+        options: {
+            legend: {display: false},
+            title: {
+                display: true,
+                text: "Cookies per second over tiome."
+            }
+        }
+    }
+    TotalCookiesAllTimeData = {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                borderColor: GetRandomColorHex(),
+                fill: false,
+                lineTension: 0,
+            }]
+        },
+        options: {
+            legend: {display: false},
+            title: {
+                display: true,
+                text: "Total cookies (all time) over time."
+            }
+        }
+    }
+    TotalCookeisThisAscensionData = {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                borderColor: GetRandomColorHex(),
+                fill: false,
+                lineTension: 0,
+            }]
+        },
+        options: {
+            legend: {display: false},
+            title: {
+                display: true,
+                text: "Total cookies (this ascension) over time."
+            }
+        }
+    }
 }
+
+function GetRandomColorHex() {
+    var hex = "0123456789ABCDEF";
+    var color = "#";
+    for (var i = 1; i <= 6; i++) {
+        color += hex[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}  
 
 //Show graph. (Debuging only)
 function ShowGraph() {
     var graphWindow = window.open("https://pjksmit.github.io/Cookie-Clicker-Bot/GraphSite.html");
-    setTimeout(function(){graphWindow.postMessage(data, "*")}, 1000);
+    setTimeout(function(){graphWindow.postMessage([ReturnOnInvestmentData, BuyData, CookiesPerSecondData, TotalCookiesAllTimeData, TotalCookeisThisAscensionData], "*")}, 1000);
     graphWindow.focus();
 }
 
@@ -195,26 +284,23 @@ const sellValues =  [23.97, 31.41,  41.59,  51.29,  61.21,  70.96,  80.90,  90, 
 //Called every second, checks whether the bot has enough cookies to buy the best option.
 function BuyBest() {
     Game.popups = 0;
-    if(typeof bestOption === "undefined") CalculateBestOption(false);
+    if(typeof bestOption === "undefined") CalculateBestOption();
     if(bestOption.getPrice() < Game.cookies) {
         bestOption.buy(1);
-        data[1].push({item: bestOption.name, time: new Date(Date.now() + 7200).toISOString().slice(11, 19)});
-        setTimeout(() => CalculateBestOption(false), 75);
+        BuyData.push({item: bestOption.name, time: new Date(Date.now() + 7200).toISOString().slice(11, 19)});
+        setTimeout(() => CalculateBestOption(), 75);
     }
 }
 
 //Calculates the most effecient thing to buy with the formula: P / B + P / CPS. Where P = the price of the item, B is the extra CPS it gives and CPS is de the current cookies per second.
-function CalculateBestOption(byGoldenCookie) {
+function CalculateBestOption() {
     var fastestReturnOnInvestment = Infinity;
     //Check the return on investment of all the available buildings.
     for(var i in Game.ObjectsById) {
         if(Game.ObjectsById[i - 1] && Game.ObjectsById[i - 1].amount == 0) break;
         building = Game.ObjectsById[i];
         var returnOnInvestement = BuildingReturnOnInvestment(building);
-        if(!byGoldenCookie) {
-            data[0][building.id]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-            data[0][building.id]["y"].push(Math.round(returnOnInvestement));
-        }
+        ReturnOnInvestmentData.data.datasets[building.id].data.push(Math.round(returnOnInvestement));
         if(returnOnInvestement < fastestReturnOnInvestment) {
             fastestReturnOnInvestment = returnOnInvestement;
             bestOption = building;
@@ -224,26 +310,20 @@ function CalculateBestOption(byGoldenCookie) {
     for(var i in Game.UpgradesInStore) {
         upgrade = Game.UpgradesInStore[i]
         var returnOnInvestement = UpgradeReturnOnInvestment(upgrade);
-        if(!byGoldenCookie) {
-            data[0][upgrade.id + Game.ObjectsN]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-            data[0][upgrade.id + Game.ObjectsN]["y"].push(Math.round(returnOnInvestement));
-        }
+        ReturnOnInvestmentData.data.datasets[upgrade.id + Game.ObjectsN].data.push(Math.round(returnOnInvestement));
         if(returnOnInvestement < fastestReturnOnInvestment) {
             fastestReturnOnInvestment = returnOnInvestement;
             bestOption = upgrade;
         }
     }
-    if(!byGoldenCookie) {
-        data[0][data[0].length - 2]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-        data[0][data[0].length - 2]["y"].push(Math.round(fastestReturnOnInvestment));
-        data[2][0]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-        data[2][0]["y"].push(Game.unbuffedCps);
-        data[3][0]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-        data[3][0]["y"].push(Game.cookiesEarned);
-        data[4][0]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-        data[4][0]["y"].push(Game.cookiesEarned + Game.cookiesReset);
-    }
-    HandleAscension(fastestReturnOnInvestment);
+    ReturnOnInvestmentData.data.labels.push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
+    CookiesPerSecondData.data.labels.push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
+    CookiesPerSecondData.data.datasets[0].data.push(Game.unbuffedCps);
+    TotalCookiesAllTimeData.data.labels.push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
+    TotalCookiesAllTimeData.data.datasets[0].data.push(Game.cookiesEarned);
+    TotalCookeisThisAscensionData.data.labels.push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
+    TotalCookeisThisAscensionData.data.datasets[0].data.push(Game.cookiesEarned + Game.cookiesReset);
+    // HandleAscension(fastestReturnOnInvestment);
     console.log(bestOption.name + " because " + fastestReturnOnInvestment + " at " + new Date(Date.now() + 7200).toISOString().slice(11, 19));
 }
 
@@ -317,9 +397,7 @@ function HandleGoldenCookies(recalculate = true) {
         shimmer = Game.shimmers[shimmer];
         if (shimmer.type == "golden") {
             shimmer.pop();
-            data[0][data[0].length - 1]["x"].push(new Date(Date.now() + 7200).toISOString().slice(11, 19));
-            data[0][data[0].length - 1]["y"].push(-10000);
-            if(recalculate) setTimeout(() => CalculateBestOption(true), 1000);
+            if(recalculate) setTimeout(() => CalculateBestOption(), 1000);
             HandleGoldenCookies(false);
         }
     }
@@ -330,7 +408,7 @@ function HandleGoldenCookies(recalculate = true) {
         if(typeof Game.buffs[i].multCpS !== "undefined") cpsMult *= Game.buffs[i].multCpS;
         if(typeof Game.buffs[i].multClick !== "undefined") clickMult *= Game.buffs[i].multClick;
     }
-    if(oldCpsMult != cpsMult || oldClickMult != clickMult) CalculateBestOption(true);
+    if(oldCpsMult != cpsMult || oldClickMult != clickMult) CalculateBestOption();
     oldCpsMult = cpsMult;
     oldClickMult = clickMult;
 }
@@ -386,16 +464,16 @@ function PlayGrimoire() {
             /* And half an hour worth of cookies is less than 30% (15% is better but otherwise this would never trigger.) 
             of the cookies in the bank and there is enough magic use "Conjure Baked Goods" to add to the buff that already is active.*/
             wizardTower.castSpell(conjureBakedGoods); 
-            CalculateBestOption(false);
+            CalculateBestOption();
             return; 
         } else if(wizardTower.magic > wizardTower.getSpellCost(forceHandOfFate)) { //Otherwise try to get another buff from a golden cookie
             wizardTower.castSpell(forceHandOfFate);
-            CalculateBestOption(false);
+            CalculateBestOption();
         }
     }
     if(wizardTower.magic / wizardTower.magicM >= 0.95 && wizardTower.magic > wizardTower.getSpellCost(forceHandOfFate)) {//Try to get a golden cookie
         wizardTower.castSpell(forceHandOfFate);
-        CalculateBestOption(false);
+        CalculateBestOption();
     }
 }
 
@@ -406,7 +484,7 @@ function PlayPantheon() {
     for(var i = 0; i < 3; i++) {
         if (temple.swaps < 3) break;
         if (temple.slot[i] != temple.gods[pantheonGods[i]].id) {temple.slotHovered = i; temple.dragging = temple.gods[pantheonGods[i]]; temple.dropGod();}
-        CalculateBestOption(false);
+        CalculateBestOption();
     }
     for (var i in Game.buffs) {
         if (typeof Game.buffs[i].multClick != "undefined" && Game.buffs[i].multClick > 1) {
@@ -414,7 +492,7 @@ function PlayPantheon() {
                 building = Game.Objects[i];
                 if(building.name != "Grandma" && building.storedTotalCps * Game.globalCpsMult / Game.unbuffedCps < 0.01) {
                     building.sell(-1);
-                    CalculateBestOption(false);
+                    CalculateBestOption();
                 } 
             }
         }
@@ -467,7 +545,7 @@ function PlantGarden(farm) {
                 return
             }
         }
-        CalculateBestOption(false);
+        CalculateBestOption();
     }
     if(farm.plants[plantOrder[currentPlant][0]].unlocked) {currentPlant++; ClearGarden(farm);}
     if(currentPlant >= plantOrder.length) {
@@ -480,18 +558,18 @@ function PlantGarden(farm) {
     if(!PlantInGarden(farm, plantOrder[currentPlant][0])) {
         if(!plant[0] in weirdToMutatePlants) {
             PlantConfiguration(farm, plantConfigurations[farm.parent.level], currentPlant);
-            CalculateBestOption(false);
+            CalculateBestOption();
         } 
         if(farm.parent.level >= 9) {
             if(plant[0] == "shriekbulb") {
                 PlantConfiguration(farm, plantConfigurations[9], currentPlant);
-                CalculateBestOption(false);
+                CalculateBestOption();
             } else if(plant[0] == "everdaisy") {
                 PlantConfiguration(farm, plantConfigurations[10], currentPlant);
-                CalculateBestOption(false);
+                CalculateBestOption();
             } else if(plant[0] == "queenbeetLump") {
                 PlantConfiguration(farm, plantConfigurations[11], currentPlant);
-                CalculateBestOption(false);
+                CalculateBestOption();
             }
         }
     } 
@@ -562,30 +640,48 @@ function PlayStockMarket() {
     if (market.brokers < market.getMaxBrokers()) { //Buy brokers
         if (10 * bank.getBrokerPrice() < Game.cookies) {
             l("bankBrokersBuy").click();
-            CalculateBestOption(false);
+            CalculateBestOption();
         } 
     }
     if (bank.officeLevel < bank.offices.length-1) { //Upgrade offices
         var office = bank.offices[bank.officeLevel];
         if (office.cost && Game.Objects["Cursor"].amount >= office.cost[0] && Game.Objects["Cursor"].level >= office.cost[1]) {
             l("bankOfficeUpgrade").click();
-            CalculateBestOption(false);
+            CalculateBestOption();
         }
       }
     for(var stock in bank.goods) {
         if(stock.val < buyValues[stock.id]) {
             bank.buyGood(stock.id,10000);
-            CalculateBestOption(false);
+            CalculateBestOption();
         }
     }
 
     for(var stock in bank.goods) {
         if(stock.val > sellValues[stock.id]) {
             bank.sellGood(stock.id,10000);
-            CalculateBestOption(false);
+            CalculateBestOption();
         }
     }
 }
+
+// //Checks if the bot should ascend.
+// function HandleAscension(returnOnInvestment) {
+//     if(returnOnInvestment > ascensionReturnOnInvestment && ReadyToAscend()) {
+        
+//         PrepareAscension();
+//     }
+// }
+
+// function ReadyToAscend() {
+//     if(true) {
+
+//     }
+// }
+
+// function PrepareAscension() {
+
+// }
 
 //Small achievements to help the milk multiplier.
 function DoSmallAchievements() {
@@ -646,7 +742,7 @@ UnDunk = function() {
 //Checks the name of the bakery, if the name is start the bot is started and if it is stop the bot stops.
 function CheckName() {
     if(!cookieBotOn && Game.bakeryNameL.textContent == "start's bakery") {
-        CalculateBestOption(false);
+        CalculateBestOption();
         clickInterval = setInterval(() => Game.ClickCookie(), 1000/clicksPerSecond);
         buyInterval = setInterval(() => BuyBest(), 100);
         goldenCookieInterval = setInterval(() => HandleGoldenCookies(), 1000);
